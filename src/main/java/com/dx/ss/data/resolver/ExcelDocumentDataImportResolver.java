@@ -19,11 +19,9 @@ public abstract class ExcelDocumentDataImportResolver<T extends ExcelDocumentDat
     public T resolve(DocumentWorker worker) {
         
         String workerType = worker.getWorkerType();
-        if(workerType.equals(WorkerTypeEnums.IMPORT_WORKER.getType())){
-            if(worker instanceof ImportWorker){
-                ImportWorker importWorker = (ImportWorker) worker;
-                return this.resolveByImport((ExcelDocument) importWorker.getSource());
-            }
+        if(workerType.equals(WorkerTypeEnums.IMPORT_WORKER.getType()) && worker instanceof ImportWorker){
+            ImportWorker importWorker = (ImportWorker) worker;
+            return this.resolveByImport((ExcelDocument) importWorker.getSource());
         }
         return null;
     }

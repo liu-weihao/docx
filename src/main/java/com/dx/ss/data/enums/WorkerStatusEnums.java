@@ -6,7 +6,7 @@ package com.dx.ss.data.enums;
  * @version V1.0  
  * @date 2016-10-21 
  * @author liu.weihao
- * @see com.tsou.community.data.worker.DocumentWorker
+ * @see com.dx.ss.data.worker.DocumentWorker
  */
 public enum WorkerStatusEnums {
 	

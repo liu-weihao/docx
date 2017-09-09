@@ -9,7 +9,7 @@ import java.util.List;
  * @version V1.0  
  * @date 2016-11-21 
  * @author liu.weihao
- * @see com.tsou.community.data.holder.DocumentDataHolder
+ * @see com.dx.ss.data.holder.DocumentDataHolder
  */
 public abstract class DocumentBean {
 

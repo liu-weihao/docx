@@ -17,11 +17,9 @@ public abstract class ExcelDocumentDataExportResolver<T extends Documentation> i
 
     public T resolve(DocumentWorker worker) {
         String workerType = worker.getWorkerType();
-        if(workerType.equals(WorkerTypeEnums.EXPORT_WORKER.getType())){
-            if(worker instanceof ExportWorker){
-                ExportWorker exportWorker = (ExportWorker) worker;
-                return this.resolveByExport((ExcelDocumentDataHolder) exportWorker.getData());
-            }
+        if(workerType.equals(WorkerTypeEnums.EXPORT_WORKER.getType()) && worker instanceof ExportWorker){
+            ExportWorker exportWorker = (ExportWorker) worker;
+            return this.resolveByExport((ExcelDocumentDataHolder) exportWorker.getData());
         }
         return null;
     }

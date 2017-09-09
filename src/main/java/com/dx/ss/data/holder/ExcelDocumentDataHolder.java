@@ -5,6 +5,9 @@ import java.util.List;
 import com.dx.ss.data.beans.DocumentBean;
 import com.dx.ss.data.doc.Documentation;
 
+/**
+ * DataHolder for Excel documents.
+ */
 public class ExcelDocumentDataHolder extends DocumentDataHolder {
     
     private Exception ex;

@@ -8,8 +8,8 @@ import org.apache.commons.lang.StringUtils;
  * @version V1.0  
  * @date 2016-10-21 
  * @author liu.weihao
- * @see com.tsou.community.data.exception.ExcelDocumentException
- * @see com.tsou.community.data.ExcelDocumentException.ResourceException
+ * @see com.dx.ss.data.exception.ExcelDocumentException
+ * @see com.dx.ss.data.exception.ResourceException
  */
 public enum ErrCodeEnums {
 	

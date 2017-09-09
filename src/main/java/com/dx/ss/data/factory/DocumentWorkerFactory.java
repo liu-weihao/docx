@@ -4,6 +4,6 @@ import com.dx.ss.data.worker.DocumentWorker;
 
 public interface DocumentWorkerFactory {
 
-    public DocumentWorker createWorker();
+    DocumentWorker createWorker();
     
 }

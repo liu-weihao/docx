@@ -10,7 +10,7 @@ import org.apache.commons.lang.StringUtils;
  * @version V1.0  
  * @date 2016-10-21 
  * @author liu.weihao
- * @see com.tsou.community.data.worker.DocumentWorker
+ * @see com.dx.ss.data.worker.DocumentWorker
  */
 public enum WorkerTypeEnums {
 	
@@ -43,11 +43,13 @@ public enum WorkerTypeEnums {
 	}
 
 	public static WorkerTypeEnums getEnumByType(String type) {
-        for (WorkerTypeEnums typeEnum : WorkerTypeEnums.values()) {
-            if (!StringUtils.isBlank(type) && type.equals(typeEnum.getType())) {
-                return typeEnum;
-            }
-        }
+    	if (!StringUtils.isBlank(type)) {
+			for (WorkerTypeEnums typeEnum : WorkerTypeEnums.values()) {
+				if (type.equals(typeEnum.getType())) {
+					return typeEnum;
+				}
+			}
+		}
         return null;
     }
 	

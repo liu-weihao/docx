@@ -7,12 +7,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -69,7 +64,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
         }else if (cellType.equals(CellType.BLANK) || cellType.equals(CellType.ERROR)) {
             return StringUtils.EMPTY;
         }else if (cellType.equals(CellType.BOOLEAN)) {
-            return (cell.getBooleanCellValue() == true ? 1 : 0);
+            return (cell.getBooleanCellValue() ? 1 : 0);
         }
         return StringUtils.EMPTY;
     }
@@ -104,7 +99,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
             method.invoke(bean, new BigDecimal(cellValue.toString()));
         } else if (parameterType.equals(Boolean.class)) { //Boolean Type
             
-            method.invoke(bean, cellValue.toString().equals("1") ? true : false);
+            method.invoke(bean, cellValue.toString().equals("1"));
         } else if (parameterType.equals(Double.class)) { //Double Type
             
             method.invoke(bean, Double.valueOf(cellValue.toString()));
@@ -119,7 +114,6 @@ public class ExcelDocumentUtil extends DocumentUtil {
             method.invoke(bean, Short.valueOf(cellValue.toString()));
         } else {    //others
             
-            parameterType.equals(String.class);
             method.invoke(bean, cellValue);
         }
     }
@@ -174,20 +168,25 @@ public class ExcelDocumentUtil extends DocumentUtil {
     /**
      * Filling data into the excel sheet. You need to specify the <code>columns</code> 
      * and the corresponding <code>dataList</code>.
+     * columns and properties are sequence-required which means one-to-one correspondence.
+     * It is a very useful for importing work.
      * @author liu.weihao
      * @date 2016-11-25 
      * @param sheet a excel sheet handle.
      * @param firstRow  the index of first row which begin to fill data. 
-     * @param properties   the property name of data bean.  
-     * @param dataList list of data you want to fill.
-     * @param cellStyle     specify a cell style.
-     * @param extras Customized data by K-V. <code>date_pattern</code> supported currently.
+     * @param properties   <b>Not Empty.</b>the property name of data bean in <code>dataList</code>.
+     *                     also can set some special properties, like {@code DocumentBean.SERIAL_PROPERTY_NAME}.
+     * @param dataList <b>Not Empty.</b>list of data you want to fill. In <code>dataList</code>, one element one row.
+     * @param cellStyle  specify a cell style.
+     * @param extras Customized data by K-V. <code>date_pattern</code> supported currently. like "date_pattern": "yyyy-MM-dd".
      * @see #setCellValue(Cell, Object, Map)
      * @throws Exception
      */
     public static void fillData(Sheet sheet, int firstRow, ArrayList<String> properties, List<?> dataList, CellStyle cellStyle, Map<String, Object> extras) throws Exception{
+        if(dataList == null || dataList.isEmpty()) return;
+        if(properties == null || properties.isEmpty()) return;
         for(Object data:dataList){
-            Class<?> claz = data.getClass();
+            Class<?> clz = data.getClass();
             Row row = sheet.createRow(firstRow++);
             int columnIndex = 0;
             int serialNum = 1;
@@ -201,9 +200,9 @@ public class ExcelDocumentUtil extends DocumentUtil {
                 String firstLetter = StringUtils.left(property, 1);
                 if (StringUtils.isBlank(firstLetter)) continue; // bean property is empty, continue.
                 // get the getXxx method.
-                Method method = claz.getMethod(property.replaceFirst(firstLetter, "get" + firstLetter.toUpperCase()));
+                Method method = clz.getMethod(property.replaceFirst(firstLetter, "get" + firstLetter.toUpperCase()));
                 if(method != null){
-                    Field field = claz.getDeclaredField(property);
+                    Field field = clz.getDeclaredField(property);
                     cell.setCellType(ExcelDocument.getCellType(field.getType()));
                     setCellValue(cell, method.invoke(data), extras);    //invoke getXxx method, and set the value to cell.
                 }
@@ -213,12 +212,14 @@ public class ExcelDocumentUtil extends DocumentUtil {
     
     /**
      * According to the data bean properties, set a data bean property values column by column.
+     * It is a very useful for exporting work.
      * @author liu.weihao
      * @date 2016-11-22 
      * @param row   a excel row contained data. Do nothing if the row is <code>null</code>.
      * @param bean   a java bean extends {@code DocumentBean}.  Do nothing if it is <code>null</code>.
      * @param properties    a list of data bean properties,  column by column correspondence.
-     * Do nothing if it is <code>null</code> or empty.
+     *                     Also can set some special properties, like {@code DocumentBean.TEMP_PROPERTY_NAME}.
+     *                      Do nothing if it is <code>null</code> or empty.
      * @param offset Zero-based offset from the beginning of cells. 0 means no offset. 
      * Do nothing when the offset equals or exceed the index of the last cell contained in this row. 
      * @param extras    Customized data by K-V. 
@@ -235,30 +236,30 @@ public class ExcelDocumentUtil extends DocumentUtil {
         List<Integer> skipList = Arrays.asList(skips);
         Class<?> model = bean.getClass();
         int i = 0;
-        
-        for(int index=offset, cellNums=row.getLastCellNum(); index<cellNums; index++){
-            if(skipList.contains(index))    continue;   //matched in skip list, continue.
+
+        for (int index = offset, cellNum = row.getLastCellNum(); index < cellNum; index++) {
+            if (skipList.contains(index)) continue;   //matched in skip list, continue.
             Cell cell = row.getCell(index); //get current cell.
             String property = properties.get(i++);  //get current property name.
-            
+
             //  add document data into tempDataList and continue
-            if(property.equalsIgnoreCase(DocumentBean.TEMP_PROPERTY_NAME)){
-                tempDataList.add(getCellValue(cell).toString());  
+            if (property.equalsIgnoreCase(DocumentBean.TEMP_PROPERTY_NAME)) {
+                tempDataList.add(getCellValue(cell).toString());
                 continue;
             }
             String firstLetter = StringUtils.left(property, 1);
             if (StringUtils.isBlank(firstLetter)) continue; // bean property is empty, continue.
             Field field = model.getDeclaredField(property);
             Method method = model.getMethod(    //get the setXxx method.
-                property.replaceFirst(firstLetter, "set" + firstLetter.toUpperCase()),
-                field.getType());
+                    property.replaceFirst(firstLetter, "set" + firstLetter.toUpperCase(Locale.ENGLISH)),
+                    field.getType());
             if (method != null) {
                 method.setAccessible(true); //make it accessible.
                 Class<?>[] parameterTypes = method.getParameterTypes(); // get the parameter(s) of setXxx method.
                 if (parameterTypes.length > 0) {
                     Class<?> type = parameterTypes[0];  //Usually, get the first parameter type.
                     Object value = getCellValue(cell);
-                    if(!StringUtils.isBlank(value.toString())){
+                    if (!StringUtils.isBlank(value.toString())) {
                         invoke(bean, method, type, value, extras);  //invoke setXxx method
                     }
                 }

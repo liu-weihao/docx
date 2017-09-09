@@ -27,6 +27,6 @@ public interface DocumentDataResolver<R> {
 	 * @see ImportWorker
 	 * @see ExportWorker
 	 */
-	public R resolve(DocumentWorker worker);
+	R resolve(DocumentWorker worker);
 	
 }

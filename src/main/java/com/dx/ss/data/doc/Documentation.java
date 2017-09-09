@@ -41,11 +41,15 @@ public abstract class Documentation {
 	/** The amount of document type supported. */
 	private static final int ALLOWED_DOC_TYPE_NUM = 3;
 	
-	/** The amount of document type supported. */
+	/**
+	 * The amount of document type group supported.
+	 * xls and xlsx for Excel.
+	 * Another is CSV.
+	 */
 	private static final int ALLOWED_DOC_GROUP_NUM = 2;
 	
 	/** The list of document type supported, it is convenient to 
-	 * check whether the document type input is supported. 
+	 * check whether the document type input is supported.
 	 */
 	private static Map<String, String> allowedDocType = new HashMap<String, String>(ALLOWED_DOC_TYPE_NUM);
 	
@@ -122,6 +126,11 @@ public abstract class Documentation {
 	public static void checkFileType(String[] paths) throws ResourceException{
 	    if(paths == null || paths.length <= 0)  return;
 	    String extension = DocumentUtil.getDocumentExt(paths[0]);
+	    if(StringUtils.isBlank(extension))
+			throw new ResourceException(
+					ErrCodeEnums.ERR_UNKNOWN_DOC_TYPE.getDetail() + extension,
+					ErrCodeEnums.ERR_UNKNOWN_DOC_TYPE.getCode());
+
 	    if(!validExtension(extension))
 	        throw new ResourceException(
                 ErrCodeEnums.ERR_UNKNOWN_DOC_TYPE.getDetail() + extension, 
