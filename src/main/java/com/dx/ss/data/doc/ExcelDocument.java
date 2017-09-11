@@ -29,7 +29,21 @@ public abstract class ExcelDocument extends Documentation {
     
     /** It is convenient to get cell type through this filed type and cell type mapping. */
     private static Map<Class<?>, CellType> cellTypeMap = new HashMap<Class<?>, CellType>();
-    
+
+    /**
+     * This attribute means the length of content displayed at most.
+     * It can be changed by {@link #setMaxColumnWidth(int)}.
+     */
+    private int maxColumnWidth = 16;
+
+    public int getMaxColumnWidth() {
+        return maxColumnWidth;
+    }
+
+    public void setMaxColumnWidth(int maxColumnWidth) {
+        this.maxColumnWidth = maxColumnWidth;
+    }
+
     static {
         cellTypeMap.put(Date.class, CellType.NUMERIC);
         cellTypeMap.put(Timestamp.class, CellType.NUMERIC);
@@ -176,7 +190,6 @@ public abstract class ExcelDocument extends Documentation {
     /**
      * Create a font(based default font) for the header.
      * font-name: <code>Arial</code>, font-size: 11,
-     * font-weight: <code>bold</code>.
      * @author liu.weihao
      * @date 2016-11-25 
      * @param workbook  a excel workbook.
@@ -184,9 +197,7 @@ public abstract class ExcelDocument extends Documentation {
      * @see #defaultFont(Workbook)
      */
     public Font headerFont(Workbook workbook) {
-        Font headerFont = this.defaultFont(workbook);
-        headerFont.setBold(true);
-        return headerFont;
+        return this.defaultFont(workbook);
     }
 
     /**
@@ -245,7 +256,7 @@ public abstract class ExcelDocument extends Documentation {
         CellStyle headerCellStyle = this.defaultCellStyle(workbook);
         headerCellStyle.setAlignment(HorizontalAlignment.CENTER);
         headerCellStyle.setFont(this.headerFont(workbook));
-        headerCellStyle.setFillForegroundColor(IndexedColors.PALE_BLUE.getIndex());
+        headerCellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return headerCellStyle;
     }
@@ -271,7 +282,7 @@ public abstract class ExcelDocument extends Documentation {
             cell.setCellValue(name);
             if(cellStyle != null)   cell.setCellStyle(cellStyle);
             //Eight times the length of the name default. Adjust the length after this method.
-            sheet.setColumnWidth(columnIndex, name.length()*8*256);
+            sheet.setColumnWidth(columnIndex, (int) (Math.ceil(name.length() / this.maxColumnWidth) * 256));
             columnIndex++;
         }
     }
