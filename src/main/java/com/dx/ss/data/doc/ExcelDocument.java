@@ -281,8 +281,15 @@ public abstract class ExcelDocument extends Documentation {
             Cell cell = this.createCell(row, columnIndex);
             cell.setCellValue(name);
             if(cellStyle != null)   cell.setCellStyle(cellStyle);
-            //Eight times the length of the name default. Adjust the length after this method.
-            sheet.setColumnWidth(columnIndex, (int) (Math.ceil(name.length() / this.maxColumnWidth) * 256));
+            if(StringUtils.isBlank(name)) continue;
+
+            int columnWidth;
+            if (name.length() >= maxColumnWidth) {
+                columnWidth = maxColumnWidth;
+            } else {
+                columnWidth =  (int) (Math.ceil(maxColumnWidth / name.length()) * 256);
+            }
+            sheet.setColumnWidth(columnIndex, columnWidth);
             columnIndex++;
         }
     }
