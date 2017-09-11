@@ -72,6 +72,14 @@ public class ExcelDocumentUtil extends DocumentUtil {
     
     /**
      * invoke setXxx method of document data bean.
+     * Sometimes the NUMERIC Excel cell value can have decimal point.
+     * The value of one of <code>Long/code>, <code>Short/code> and <code>Integer/code> types
+     * can be settled via Double.
+     * There are some loss of accuracy if the <code>parameterType</code> specified inappropriately.
+     * <p>
+     *     Attention: Boolean type is special.
+     *     if cell value is "1" or "true" means <code>true</code>, otherwise false.
+     * </p>
      * @author liu.weihao
      * @date 2016-11-22 
      * @param bean  a java bean extends {@code DocumentBean}. 
@@ -89,6 +97,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
                                Object cellValue, Map<String, Object> extras)
                                                                             throws IllegalAccessException,
                                                                             InvocationTargetException, IllegalArgumentException, ParseException {
+
         if (parameterType.equals(Date.class)  || parameterType.equals(Timestamp.class)) { //Date Type
             if (isDateType(cellValue)){
                 method.invoke(bean, cellValue);
@@ -98,19 +107,19 @@ public class ExcelDocumentUtil extends DocumentUtil {
             method.invoke(bean, new BigDecimal(cellValue.toString()));
         } else if (parameterType.equals(Boolean.class)) { //Boolean Type
             
-            method.invoke(bean, cellValue.toString().equals("1"));
+            method.invoke(bean, cellValue.toString().equals("1") || cellValue.toString().equalsIgnoreCase("true"));
         } else if (parameterType.equals(Double.class)) { //Double Type
             
             method.invoke(bean, Double.valueOf(cellValue.toString()));
         } else if (parameterType.equals(Integer.class)) { //Integer Type
-            
-            method.invoke(bean, Integer.valueOf(cellValue.toString()));
+
+            method.invoke(bean, Double.valueOf(cellValue.toString()).intValue());
         } else if (parameterType.equals(Long.class)) { //Long Type
-            
-            method.invoke(bean, Long.valueOf(cellValue.toString()));
+
+            method.invoke(bean, Double.valueOf(cellValue.toString()).longValue());
         } else if (parameterType.equals(Short.class)) { //Short Type
             
-            method.invoke(bean, Short.valueOf(cellValue.toString()));
+            method.invoke(bean, Double.valueOf(cellValue.toString()).shortValue());
         } else {    //others
             
             method.invoke(bean, cellValue);
