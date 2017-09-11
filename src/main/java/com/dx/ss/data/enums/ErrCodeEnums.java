@@ -1,6 +1,6 @@
 package com.dx.ss.data.enums;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Error code definitions. It will be used in some customized exception.
