@@ -169,7 +169,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
      * Filling data into the excel sheet. You need to specify the <code>columns</code> 
      * and the corresponding <code>dataList</code>.
      * columns and properties are sequence-required which means one-to-one correspondence.
-     * It is a very useful for importing work.
+     * It is a very useful for exporting work.
      * @author liu.weihao
      * @date 2016-11-25 
      * @param sheet a excel sheet handle.
@@ -212,7 +212,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
     
     /**
      * According to the data bean properties, set a data bean property values column by column.
-     * It is a very useful for exporting work.
+     * It is a very useful for importing work.
      * @author liu.weihao
      * @date 2016-11-22 
      * @param row   a excel row contained data. Do nothing if the row is <code>null</code>.
