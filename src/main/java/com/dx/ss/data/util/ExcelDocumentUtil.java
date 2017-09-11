@@ -19,6 +19,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import com.dx.ss.data.beans.DocumentBean;
+import com.dx.ss.data.doc.ExcelDocument;
 
 /** 
  * Some utils for excel document.
@@ -70,11 +71,20 @@ public class ExcelDocumentUtil extends DocumentUtil {
     
     /**
      * invoke setXxx method of document data bean.
+     * Sometimes the NUMERIC Excel cell value can have decimal point.
+     * The value of one of <code>Long/code>, <code>Short/code> and <code>Integer/code> types
+     * can be settled via Double.
+     * There are some loss of accuracy if the <code>parameterType</code> specified inappropriately.
+     * <p>
+     *     Attention: Boolean type is special.
+     *     if cell value is "1" or "true" means <code>true</code>, otherwise false.
+     * </p>
      * @author liu.weihao
      * @date 2016-11-22 
      * @param bean  a java bean extends {@code DocumentBean}. 
      * @param method    setXxx method
-     * @param parameterType the data type of property.
+     * @param parameterType the data type of property. if it is a date type, only two class types are supported:
+     *                      {@link Date} Date and {@link Timestamp} Timestamp.
      * @param cellValue property value from excel cell.
      * @param extras    Customized data by K-V. 
      * @throws IllegalAccessException
@@ -86,11 +96,10 @@ public class ExcelDocumentUtil extends DocumentUtil {
                                Object cellValue, Map<String, Object> extras)
                                                                             throws IllegalAccessException,
                                                                             InvocationTargetException, IllegalArgumentException, ParseException {
+
         if (parameterType.equals(Date.class)  || parameterType.equals(Timestamp.class)) { //Date Type
-            if (!StringUtils.isBlank(cellValue.toString())){
-                String pattern = extras.get("date_pattern") == null ? "yyyy-MM-dd" : extras.get("date_pattern").toString();
-                SimpleDateFormat format = new SimpleDateFormat(pattern);
-                method.invoke(bean, format.parse(cellValue.toString()));
+            if (isDateType(cellValue)){
+                method.invoke(bean, cellValue);
             }
         } else if (parameterType.equals(BigDecimal.class)) { //BigDecimal Type
             
@@ -109,14 +118,14 @@ public class ExcelDocumentUtil extends DocumentUtil {
             
             method.invoke(bean, Double.valueOf(cellValue.toString()));
         } else if (parameterType.equals(Integer.class)) { //Integer Type
-            
-            method.invoke(bean, Integer.valueOf(cellValue.toString()));
+
+            method.invoke(bean, Double.valueOf(cellValue.toString()).intValue());
         } else if (parameterType.equals(Long.class)) { //Long Type
-            
-            method.invoke(bean, Long.valueOf(cellValue.toString()));
+
+            method.invoke(bean, Double.valueOf(cellValue.toString()).longValue());
         } else if (parameterType.equals(Short.class)) { //Short Type
             
-            method.invoke(bean, Short.valueOf(cellValue.toString()));
+            method.invoke(bean, Double.valueOf(cellValue.toString()).shortValue());
         } else {    //others
             
             method.invoke(bean, cellValue);
