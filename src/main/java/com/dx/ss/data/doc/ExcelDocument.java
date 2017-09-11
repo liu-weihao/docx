@@ -1,5 +1,13 @@
 package com.dx.ss.data.doc;
 
+import com.dx.ss.data.enums.ErrCodeEnums;
+import com.dx.ss.data.exception.ExcelDocumentException;
+import com.dx.ss.data.exception.ResourceException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -7,26 +15,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.dx.ss.data.enums.ErrCodeEnums;
-import com.dx.ss.data.exception.ExcelDocumentException;
-import com.dx.ss.data.exception.ResourceException;
 
 
 /** 
@@ -64,6 +52,7 @@ public abstract class ExcelDocument extends Documentation {
      * @return  a cell type.
      */
     public static CellType getCellType(Class<?> type) {
+        if(type == null) return CellType.BLANK;
         return cellTypeMap.get(type);
     }
     
@@ -282,7 +271,7 @@ public abstract class ExcelDocument extends Documentation {
             cell.setCellValue(name);
             if(cellStyle != null)   cell.setCellStyle(cellStyle);
             //Eight times the length of the name default. Adjust the length after this method.
-            sheet.setColumnWidth(columnIndex, name.length()*8*256); 
+            sheet.setColumnWidth(columnIndex, name.length()*8*256);
             columnIndex++;
         }
     }

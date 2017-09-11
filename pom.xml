@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.dx.ss.lib</groupId>
 	<artifactId>docx</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.4</version>
 	<name>docx</name>
 	<description>Document export and import framework.</description>
 
 	<properties>
-		<poi.version>3.15</poi.version>
+		<poi.version>3.16</poi.version>
 		<common.lang3.version>3.4</common.lang3.version>
 	</properties>
 

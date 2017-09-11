@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.dx.ss.data.doc.ExcelDocument;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -18,7 +19,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import com.dx.ss.data.beans.DocumentBean;
-import com.dx.ss.data.doc.ExcelDocument;
 
 /** 
  * Some utils for excel document.
@@ -35,9 +35,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
      * 
      * <p>A <code>CELL_TYPE_BLANK</code> or <code>CELL_TYPE_ERROR</code> cell type 
      * will return the empty string.</p>
-     * 
-     * <p>An <code>CELL_TYPE_BOOLEAN</code> cell type will return the 1 (int, which means true) 
-     * or 0 (int, which means false).</p>
+     *
      * @author liu.weihao
      * @date 2016-11-17 
      * @param cell a Cell handle.
@@ -64,7 +62,7 @@ public class ExcelDocumentUtil extends DocumentUtil {
         }else if (cellType.equals(CellType.BLANK) || cellType.equals(CellType.ERROR)) {
             return StringUtils.EMPTY;
         }else if (cellType.equals(CellType.BOOLEAN)) {
-            return (cell.getBooleanCellValue() ? 1 : 0);
+            return cell.getBooleanCellValue();
         }
         return StringUtils.EMPTY;
     }
@@ -98,8 +96,15 @@ public class ExcelDocumentUtil extends DocumentUtil {
             
             method.invoke(bean, new BigDecimal(cellValue.toString()));
         } else if (parameterType.equals(Boolean.class)) { //Boolean Type
-            
-            method.invoke(bean, cellValue.toString().equals("1"));
+
+            String val = cellValue.toString();
+            if (extras.get("true_value") != null) {
+
+                method.invoke(bean, val.equalsIgnoreCase(extras.get("true_value").toString()));
+            } else {
+
+                method.invoke(bean, val.equals("1") || val.equalsIgnoreCase("true"));
+            }
         } else if (parameterType.equals(Double.class)) { //Double Type
             
             method.invoke(bean, Double.valueOf(cellValue.toString()));
@@ -124,43 +129,52 @@ public class ExcelDocumentUtil extends DocumentUtil {
      * if the cell type is not settled, get the cell type by the type of value, 
      * then set it to the cell type.  
      * @author liu.weihao
-     * @date 2016-11-25 
-     * @param cell  a cell 
+     * @date 2016-11-25
+     * @param cell  a cell
+     * @param cellType cell type.
      * @param value the cell value
-     * @param extras Customized data by K-V. 
-     * <code>date_pattern</code> supported currently.
+     * @param extras Customized data by K-V.
      */
-    public static void setCellValue(Cell cell, Object value, Map<String, Object> extras) {
+    public static void setCellValue(Cell cell, CellType cellType, Object value, Map<String, Object> extras) {
         if(cell == null || value == null) return;
-        
-        CellType cellType = cell.getCellTypeEnum();
         if(cellType.equals(CellType.STRING)) {
             cell.setCellValue(StringUtils.trimToEmpty(value.toString()));
-        }else if (cellType.equals(CellType.NUMERIC)) {
-            Class<?> claz = value.getClass();
-            if(claz.equals(Date.class) || claz.equals(Timestamp.class)) {   //Date type
+        } else if (cellType.equals(CellType.BOOLEAN)) {
+            String val = value.toString();
+            if (extras.get("true_value") != null && val.equalsIgnoreCase(extras.get("true_value").toString())
+                    || val.equals("1") || val.equalsIgnoreCase("true")) {
+
+                cell.setCellValue(true);
+            } else {
+
+                cell.setCellValue(false);
+            }
+
+        } else if (cellType.equals(CellType.NUMERIC)) {
+            Class<?> clz = value.getClass();
+            if(clz.equals(Date.class) || clz.equals(Timestamp.class)) {   //Date type
                 String pattern = extras.get("date_pattern") == null ? "yyyy-MM-dd" : extras.get("date_pattern").toString();
                 cell.setCellValue(new SimpleDateFormat(pattern).format(value));
-            }else if(claz.equals(Boolean.class)){   //Boolean type
+            }else if(clz.equals(Boolean.class)){   //Boolean type
                 
                 cell.setCellValue(Boolean.valueOf(value.toString()));
-            }else if (claz.equals(BigDecimal.class)) { //BigDecimal Type
+            }else if (clz.equals(BigDecimal.class)) { //BigDecimal Type
                 
                 cell.setCellValue(new BigDecimal(value.toString()).doubleValue());
-            }else if(claz.equals(Double.class)){    //Double type
+            }else if(clz.equals(Double.class)){    //Double type
                 
                 cell.setCellValue(Double.valueOf(value.toString()));
-            }else if (claz.equals(Integer.class)) { //Integer Type
+            }else if (clz.equals(Integer.class)) { //Integer Type
                 
                 cell.setCellValue(Integer.valueOf(value.toString()));
-            } else if (claz.equals(Long.class)) { //Long Type
+            } else if (clz.equals(Long.class)) { //Long Type
                 
                 cell.setCellValue(Long.valueOf(value.toString()));
-            } else if (claz.equals(Short.class)) { //Short Type
+            } else if (clz.equals(Short.class)) { //Short Type
                 
                 cell.setCellValue(Short.valueOf(value.toString()));
             }
-        }else { //others, set empty("") value.
+        } else { //others, set empty("") value.
             cell.setCellValue(StringUtils.EMPTY);
         }
     }
@@ -178,8 +192,11 @@ public class ExcelDocumentUtil extends DocumentUtil {
      *                     also can set some special properties, like {@code DocumentBean.SERIAL_PROPERTY_NAME}.
      * @param dataList <b>Not Empty.</b>list of data you want to fill. In <code>dataList</code>, one element one row.
      * @param cellStyle  specify a cell style.
-     * @param extras Customized data by K-V. <code>date_pattern</code> supported currently. like "date_pattern": "yyyy-MM-dd".
-     * @see #setCellValue(Cell, Object, Map)
+     * @param extras Customized data by K-V.
+     *               <code>date_pattern</code> supported. like "date_pattern": "yyyy-MM-dd".
+     *               <code>true_value</code> supported. like "true_value": "1" which means character "1" equals true.
+     *               For the Boolean-Type cell value, both "true" and "1" are represent {@code true} default.
+     * @see #setCellValue(Cell, CellType, Object, Map)
      * @throws Exception
      */
     public static void fillData(Sheet sheet, int firstRow, ArrayList<String> properties, List<?> dataList, CellStyle cellStyle, Map<String, Object> extras) throws Exception{
@@ -202,9 +219,14 @@ public class ExcelDocumentUtil extends DocumentUtil {
                 // get the getXxx method.
                 Method method = clz.getMethod(property.replaceFirst(firstLetter, "get" + firstLetter.toUpperCase()));
                 if(method != null){
+                    /**
+                     * Attention: setCellType not work well. Do not use it.
+                     * See bug 59791.
+                     */
+                    //cell.setCellType(ExcelDocument.getCellType(field.getType()));
                     Field field = clz.getDeclaredField(property);
-                    cell.setCellType(ExcelDocument.getCellType(field.getType()));
-                    setCellValue(cell, method.invoke(data), extras);    //invoke getXxx method, and set the value to cell.
+                    //invoke getXxx method, and set the value to cell.
+                    setCellValue(cell, ExcelDocument.getCellType(field.getType()), method.invoke(data), extras);
                 }
             }
         }
@@ -222,8 +244,10 @@ public class ExcelDocumentUtil extends DocumentUtil {
      *                      Do nothing if it is <code>null</code> or empty.
      * @param offset Zero-based offset from the beginning of cells. 0 means no offset. 
      * Do nothing when the offset equals or exceed the index of the last cell contained in this row. 
-     * @param extras    Customized data by K-V. 
-     * <code>date_pattern</code> supported currently.
+     * @param extras    Customized data by K-V.
+     *                  <code>date_pattern</code> supported currently.
+     *                  <code>true_value</code> supported. like "true_value": "yes" which means character "yes" equals true.
+     *                  For the Boolean-Type cell value, both "true" and "1" are represent {@code true} default.
      * @param skips The index of cells. Skipping specified cells.
      * @throws Exception    field not found, method not found, illegalArgument, etc
      */
