@@ -2,6 +2,8 @@ package com.dx.ss.data.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
@@ -64,5 +66,18 @@ public class DocumentUtil {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Whether object is a type of date.
+     * As well as the subclass of {@link Date} Date.
+     * @author liu.weihao
+     * @date 2017-09-11
+     * @param object obj
+     * @return true if it is, otherwise false.
+     */
+    public static boolean isDateType(Object object) {
+        if(object == null) return false;
+        return object instanceof Date;
     }
 }

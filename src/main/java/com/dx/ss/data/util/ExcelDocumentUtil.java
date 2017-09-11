@@ -76,7 +76,8 @@ public class ExcelDocumentUtil extends DocumentUtil {
      * @date 2016-11-22 
      * @param bean  a java bean extends {@code DocumentBean}. 
      * @param method    setXxx method
-     * @param parameterType the data type of property.
+     * @param parameterType the data type of property. if it is a date type, only two class types are supported:
+     *                      {@link Date} Date and {@link Timestamp} Timestamp.
      * @param cellValue property value from excel cell.
      * @param extras    Customized data by K-V. 
      * @throws IllegalAccessException
@@ -89,10 +90,8 @@ public class ExcelDocumentUtil extends DocumentUtil {
                                                                             throws IllegalAccessException,
                                                                             InvocationTargetException, IllegalArgumentException, ParseException {
         if (parameterType.equals(Date.class)  || parameterType.equals(Timestamp.class)) { //Date Type
-            if (!StringUtils.isBlank(cellValue.toString())){
-                String pattern = extras.get("date_pattern") == null ? "yyyy-MM-dd" : extras.get("date_pattern").toString();
-                SimpleDateFormat format = new SimpleDateFormat(pattern);
-                method.invoke(bean, format.parse(cellValue.toString()));
+            if (isDateType(cellValue)){
+                method.invoke(bean, cellValue);
             }
         } else if (parameterType.equals(BigDecimal.class)) { //BigDecimal Type
             
@@ -138,9 +137,8 @@ public class ExcelDocumentUtil extends DocumentUtil {
             cell.setCellValue(StringUtils.trimToEmpty(value.toString()));
         }else if (cellType.equals(CellType.NUMERIC)) {
             Class<?> claz = value.getClass();
-            if(claz.equals(Date.class) || claz.equals(Timestamp.class)) {   //Date type
-                String pattern = extras.get("date_pattern") == null ? "yyyy-MM-dd" : extras.get("date_pattern").toString();
-                cell.setCellValue(new SimpleDateFormat(pattern).format(value));
+            if(isDateType(value)) {   //Date type
+                cell.setCellValue((Date) value);
             }else if(claz.equals(Boolean.class)){   //Boolean type
                 
                 cell.setCellValue(Boolean.valueOf(value.toString()));
