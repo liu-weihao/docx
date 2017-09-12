@@ -1,5 +1,6 @@
 package com.dx.ss.data.doc;
 
+import com.dx.ss.data.beans.DocumentHeader;
 import com.dx.ss.data.enums.ErrCodeEnums;
 import com.dx.ss.data.exception.ExcelDocumentException;
 import com.dx.ss.data.exception.ResourceException;
@@ -34,7 +35,7 @@ public abstract class ExcelDocument extends Documentation {
      * This attribute means the length of content displayed at most.
      * It can be changed by {@link #setMaxColumnWidth(int)}.
      */
-    private int maxColumnWidth = 16;
+    private int maxColumnWidth = 10;
 
     public int getMaxColumnWidth() {
         return maxColumnWidth;
@@ -264,33 +265,30 @@ public abstract class ExcelDocument extends Documentation {
     /**
      * Create a header row in a sheet with names and cell style.
      * @author liu.weihao
-     * @date 2016-11-25 
+     * @date 2016-11-25
      * @param sheet a sheet in excel.
      * @param rowIndex the index of header row.
-     * @param headerNames   a array list of header names.
-     * @param cellStyle the cell style for the header columns.
-     * @throws ExcelDocumentException
+     * @param height the height of header row.
+     * @param headers   a array list of header settings.
      */
-    public void createHeaderRow(Sheet sheet, int rowIndex, ArrayList<String> headerNames, CellStyle cellStyle) throws ExcelDocumentException{
+    public void createHeaderRow(Sheet sheet, int rowIndex, int height, ArrayList<DocumentHeader> headers) throws ExcelDocumentException{
         if(sheet == null)   return;
-        if(headerNames == null || headerNames.size() == 0)  return;
+        if(headers == null || headers.isEmpty())  return;
+        if(rowIndex < 0) rowIndex = 0;
         Row row = this.createRow(sheet, rowIndex);
-        row.setHeightInPoints(23);//23px default.
+        if (height <= 0) {//23px default.
+            height = 23;
+        }
+        row.setHeightInPoints(height);
         int columnIndex = 0;
-        for(String name: headerNames){
+        for(DocumentHeader header: headers){
+            if(header == null) continue;
             Cell cell = this.createCell(row, columnIndex);
-            cell.setCellValue(name);
-            if(cellStyle != null)   cell.setCellStyle(cellStyle);
-            if(StringUtils.isBlank(name)) continue;
-
-            int columnWidth;
-            if (name.length() >= maxColumnWidth) {
-                columnWidth = maxColumnWidth;
-            } else {
-                columnWidth =  (int) (Math.ceil(maxColumnWidth / name.length()) * 256);
+            cell.setCellValue(header.getName());
+            if (header.getCellStyle() != null) {
+                cell.setCellStyle(header.getCellStyle());
             }
-            sheet.setColumnWidth(columnIndex, columnWidth);
-            columnIndex++;
+            sheet.setColumnWidth(columnIndex++, header.getWidth() * 256);
         }
     }
     
